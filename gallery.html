@@ -37,7 +37,12 @@
 
   <main class="gallery-page">
     <section class="gallery-section shell">
-      <div class="gallery-grid">
+      <div class="gallery-loader" id="gallery-loader" role="status" aria-live="polite">
+        <span class="gallery-loader__mark"></span>
+        <span>Loading memories...</span>
+      </div>
+
+      <div class="gallery-grid is-loading" id="gallery-grid">
         <article class="gallery-card">
           <div class="gallery-card__image-wrap">
             <img src="assets/images/image1.jpg" alt="Featured memory" class="gallery-card__image" />
@@ -152,5 +157,39 @@
 
     <p class="footer__copy">Our forever space © 2026</p>
   </footer>
+
+  <script>
+    const galleryGrid = document.getElementById('gallery-grid');
+    const galleryLoader = document.getElementById('gallery-loader');
+    const galleryImages = Array.from(document.querySelectorAll('.gallery-card__image'));
+
+    function finishGalleryLoad() {
+      if (galleryGrid) galleryGrid.classList.remove('is-loading');
+      if (galleryLoader) galleryLoader.classList.add('is-hidden');
+    }
+
+    if (galleryImages.length === 0) {
+      finishGalleryLoad();
+    } else {
+      let settledImages = 0;
+
+      function markImageSettled() {
+        settledImages += 1;
+        if (settledImages >= galleryImages.length) {
+          finishGalleryLoad();
+        }
+      }
+
+      galleryImages.forEach((image) => {
+        if (image.complete) {
+          markImageSettled();
+          return;
+        }
+
+        image.addEventListener('load', markImageSettled, { once: true });
+        image.addEventListener('error', markImageSettled, { once: true });
+      });
+    }
+  </script>
 </body>
 </html>
