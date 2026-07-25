@@ -44,8 +44,8 @@
        </div>
 
         <h1>
-          Happy Birthday,<br>
-          my love, my favorite person, <span>my forever.</span>
+          Just a little longer until our forever begins,<br>
+          together as one
         </h1>
 
         <div class="hero__cta">
@@ -72,33 +72,35 @@
 
     <section class="section shell" id="message">
       <article class="message-card message-card--full">
-        <p class="section-kicker">A birthday note for you.</p>
-        <h2 class="section-title">Happy Birthday love</h2>
+        <h2 class="section-title">To the Woman Who Has My Heart</h2>
 
         <div class="message-lines">
           <p>
-            Happy birthday, my love. Today is all about you, and I hope you feel even a small part of
-            how loved, precious, and special you are to me. I still cannot believe I get to love you,
-            celebrate you, and call you mine.
+            My Love,
           </p>
 
           <p>
-            You have brought so much peace, warmth, and happiness into my life. The way you love me,
-            the way you care, the way you make ordinary moments feel soft and safe, it means more to me
-            than I can properly explain. Being with you has made my life feel fuller and more beautiful.
+            As I sit here writing this, all I can think about is how close we are to seeing each other again. Every day that passes brings me one step closer to you, and I honestly cannot wait. I miss you more than words can explain, and the thought of finally being able to hold you, look into your eyes, and feel your warmth again fills me with so much joy.
           </p>
 
           <p>
-            On your birthday, I want you to know that I am so proud of the person you are. I love your
-            heart, your smile, your little ways, your clinginess, your strength, and the comfort I feel
-            whenever I am close to you. You are my baby, my best feeling, and the person I cannot wait
-            to build every part of life with.
+            It still amazes me that very soon, I will stand beside you and promise you forever. Soon, you will not just be the person I love. You will be my wife, which means you are officially stuck with me for life. I hope you are fully prepared.
           </p>
 
           <p>
-            I pray this year gives you happiness, peace, answered prayers, and all the love you deserve.
-            I will keep doing my level best to make you happy, protect your heart, and choose you every
-            single day. I love you more than words can hold. Happy birthday, love.
+            You have brought so much peace, warmth, and happiness into my life. The way you love me, care for me, and somehow tolerate all my nonsense makes me feel incredibly lucky. Being with you feels like home, and I cannot wait for us to begin this new chapter together.
+          </p>
+
+          <p>
+            I am looking forward to all of it. Seeing you walk towards me, holding your hand, building our home, travelling, laughing over silly things, arguing about what to eat, and facing every season of life together. More than anything, I am looking forward to finally being yours, completely and forever.
+          </p>
+
+          <p>
+            I pray God continues to bless us, guide us, and strengthen the life we are about to build. I promise to keep choosing you, loving you, protecting your heart, and doing my best to make you feel as cherished as you make me feel every day.
+          </p>
+
+          <p>
+            Thank you for being my peace, my happiness, and the greatest blessing in my life. I cannot wait to see you, hold you, annoy you in person again, and begin forever with you.
           </p>
 
           <p class="message-sign">Yours always,<br>Kev ❤️</p>
@@ -170,6 +172,15 @@
     const audio = document.getElementById('audio-player');
     const countdownEl = document.getElementById('wedding-countdown');
     let activeCard = null;
+    let hasCountdownCelebrated = false;
+
+    function launchCountdownCelebration() {
+      if (!countdownEl || hasCountdownCelebrated) return;
+
+      hasCountdownCelebrated = true;
+      countdownEl.textContent = 'We finally meet❤️';
+      countdownEl.classList.add('is-celebrating');
+    }
 
     function createCard(track) {
       const card = document.createElement('button');
@@ -231,12 +242,13 @@
     function updateCountdown() {
       if (!countdownEl) return;
 
-      const targetDate = new Date(2026, 7, 1, 0, 0, 0);
+      // 2026-08-01 19:50 IST = 2026-08-01 14:20 UTC
+      const targetDate = new Date(Date.UTC(2026, 7, 1, 14, 20, 0));
       const now = new Date();
       const diff = targetDate - now;
 
       if (diff <= 0) {
-        countdownEl.textContent = "It's our day ❤️";
+        launchCountdownCelebration();
         return;
       }
 

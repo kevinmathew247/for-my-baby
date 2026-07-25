@@ -1,0 +1,10 @@
+{
+  "name": "for-my-baby",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static site for countdown and memories",
+  "scripts": {
+    "dev": "python3 -m http.server 5173",
+    "start": "python3 -m http.server 5173"
+  }
+}
