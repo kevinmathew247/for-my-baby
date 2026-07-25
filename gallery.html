@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
+  <div class="page-loader" id="page-loader" role="status" aria-live="polite">
+    <span class="page-loader__mark"></span>
+    <span>Loading memories...</span>
+  </div>
+
   <div class="petals" aria-hidden="true">
     <span class="petal"></span>
     <span class="petal"></span>
@@ -37,11 +42,6 @@
 
   <main class="gallery-page">
     <section class="gallery-section shell">
-      <div class="gallery-loader" id="gallery-loader" role="status" aria-live="polite">
-        <span class="gallery-loader__mark"></span>
-        <span>Loading memories...</span>
-      </div>
-
       <div class="gallery-grid is-loading" id="gallery-grid">
         <article class="gallery-card">
           <div class="gallery-card__image-wrap">
@@ -159,13 +159,18 @@
   </footer>
 
   <script>
+    const pageLoader = document.getElementById('page-loader');
     const galleryGrid = document.getElementById('gallery-grid');
-    const galleryLoader = document.getElementById('gallery-loader');
-    const galleryImages = Array.from(document.querySelectorAll('.gallery-card__image'));
+    const galleryImages = Array.from(document.images);
 
     function finishGalleryLoad() {
       if (galleryGrid) galleryGrid.classList.remove('is-loading');
-      if (galleryLoader) galleryLoader.classList.add('is-hidden');
+      if (pageLoader) {
+        pageLoader.classList.add('is-hidden');
+        window.setTimeout(() => {
+          pageLoader.remove();
+        }, 320);
+      }
     }
 
     if (galleryImages.length === 0) {

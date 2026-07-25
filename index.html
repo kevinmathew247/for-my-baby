@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
+  <div class="page-loader" id="page-loader" role="status" aria-live="polite">
+    <span class="page-loader__mark"></span>
+    <span>Loading our page...</span>
+  </div>
+
   <div class="petals" aria-hidden="true">
     <span class="petal"></span>
     <span class="petal"></span>
@@ -21,8 +26,6 @@
     <span class="petal"></span>
     <span class="petal"></span>
   </div>
-
-  <div class="countdown-confetti-burst" id="confetti-burst" aria-hidden="true"></div>
 
   <nav class="nav">
     <div class="shell nav__inner">
@@ -40,8 +43,8 @@
   <main>
     <section class="hero shell">
       <div class="hero__top">
-       <div class="eyebrow countdown-pill">
-        <span class="countdown-label">Days until we meet</span>
+      <div class="eyebrow countdown-pill">
+        <span class="countdown-label" id="countdown-label">Days until we meet</span>
         <span id="wedding-countdown">Loading...</span>
        </div>
 
@@ -158,8 +161,44 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <script>
+    const pageLoader = document.getElementById('page-loader');
+    const pageImages = Array.from(document.images);
+
+    function finishPageLoad() {
+      if (!pageLoader) return;
+
+      pageLoader.classList.add('is-hidden');
+      window.setTimeout(() => {
+        pageLoader.remove();
+      }, 320);
+    }
+
+    if (pageImages.length === 0) {
+      finishPageLoad();
+    } else {
+      let settledImages = 0;
+
+      function markImageSettled() {
+        settledImages += 1;
+        if (settledImages >= pageImages.length) {
+          finishPageLoad();
+        }
+      }
+
+      pageImages.forEach((image) => {
+        if (image.complete) {
+          markImageSettled();
+          return;
+        }
+
+        image.addEventListener('load', markImageSettled, { once: true });
+        image.addEventListener('error', markImageSettled, { once: true });
+      });
+    }
+
     const songsILove = [
       { title: 'Her', artist: 'JVKE', src: 'songs/JVKE - her official lyric video.mp3' },
       { title: 'Pretty', artist: 'JVKE', src: 'songs/JVKE -  pretty (official lyric video).mp3' },
@@ -171,8 +210,19 @@
 
     const musicGrid = document.getElementById('music-grid');
     const audio = document.getElementById('audio-player');
+    const countdownLabelEl = document.getElementById('countdown-label');
     const countdownEl = document.getElementById('wedding-countdown');
+    const countdownTargetDate = new Date(Date.UTC(2026, 7, 1, 14, 20, 0));
+    const celebrationStorageKey = 'countdownCelebrationSession';
+    const celebrationDurationMs = 2 * 60 * 60 * 1000;
+    const celebrationBurstIntervalMs = 4000;
     let activeCard = null;
+    let hasCountdownCelebrated = false;
+    let activeCelebrationSource = null;
+    let celebrationIntervalId = null;
+    let celebrationTimeoutId = null;
+    let heartShape = null;
+    let sparkleShape = null;
 
     function createCard(track) {
       const card = document.createElement('button');
@@ -232,12 +282,10 @@
     }
 
     function updateCountdown() {
-      if (!countdownEl) return;
+      if (!countdownEl || activeCelebrationSource) return;
 
-      // 2026-08-01 19:50 IST = 2026-08-01 14:20 UTC
-      const targetDate = new Date(Date.UTC(2026, 7, 1, 14, 20, 0));
       const now = new Date();
-      const diff = targetDate - now;
+      const diff = countdownTargetDate - now;
 
       if (diff <= 0) {
         launchCountdownCelebration();
@@ -252,73 +300,161 @@
       countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
 
+    function isCountdownComplete() {
+      return Date.now() >= countdownTargetDate.getTime();
+    }
+
+    function clearCelebrationTimers() {
+      if (celebrationIntervalId) {
+        clearInterval(celebrationIntervalId);
+        celebrationIntervalId = null;
+      }
+
+      if (celebrationTimeoutId) {
+        clearTimeout(celebrationTimeoutId);
+        celebrationTimeoutId = null;
+      }
+    }
+
+    function clearCelebrationBurst() {
+      // canvas-confetti manages particle lifecycle internally.
+    }
+
+    function finishCelebrationSession() {
+      const source = activeCelebrationSource;
+
+      clearCelebrationTimers();
+      clearCelebrationBurst();
+      localStorage.removeItem(celebrationStorageKey);
+      activeCelebrationSource = null;
+
+      if (!countdownEl) return;
+
+      if (source === 'test' && isCountdownComplete() && !hasCountdownCelebrated) {
+        launchCountdownCelebration();
+        return;
+      }
+
+      if (!hasCountdownCelebrated) {
+        if (countdownLabelEl) {
+          countdownLabelEl.hidden = false;
+        }
+        countdownEl.classList.remove('is-celebrating');
+        updateCountdown();
+      }
+    }
+
+    function playCountdownCelebrationEffect() {
+      burstConfetti();
+    }
+
+    function startCelebrationSession(source, startedAt = Date.now()) {
+      if (!countdownEl) return;
+
+      const elapsed = Date.now() - startedAt;
+      const remainingMs = celebrationDurationMs - elapsed;
+
+      if (remainingMs <= 0) {
+        finishCelebrationSession();
+        return;
+      }
+
+      clearCelebrationTimers();
+      clearCelebrationBurst();
+      activeCelebrationSource = source;
+      if (source === 'countdown') {
+        localStorage.setItem(celebrationStorageKey, JSON.stringify({ source, startedAt }));
+      }
+      if (countdownLabelEl) {
+        countdownLabelEl.hidden = source === 'countdown' || source === 'test' || isCountdownComplete();
+      }
+      countdownEl.textContent = 'We finally meet 🫂 ❤️';
+      countdownEl.classList.add('is-celebrating');
+      playCountdownCelebrationEffect();
+
+      celebrationIntervalId = setInterval(() => {
+        playCountdownCelebrationEffect();
+      }, celebrationBurstIntervalMs);
+
+      celebrationTimeoutId = setTimeout(() => {
+        finishCelebrationSession();
+      }, remainingMs);
+    }
+
     function launchCountdownCelebration() {
       if (!countdownEl || hasCountdownCelebrated) return;
 
       hasCountdownCelebrated = true;
-      countdownEl.textContent = 'We finally meet❤️';
-      countdownEl.classList.add('is-celebrating');
-      
-      // Store celebration start time (valid for 2 hours)
-      const celebrationStart = Date.now();
-      localStorage.setItem('celebrationStart', celebrationStart);
-      
-      burstConfetti();
-      
-      // Clear confetti after 2 hours
-      setTimeout(() => {
-        localStorage.removeItem('celebrationStart');
-        const burst = document.getElementById('confetti-burst');
-        if (burst) burst.innerHTML = '';
-      }, 2 * 60 * 60 * 1000);
+      startCelebrationSession('countdown');
     }
 
     function burstConfetti() {
-      const burst = document.getElementById('confetti-burst');
-      if (!burst) return;
+      if (!window.confetti || !countdownEl) return;
 
-      const pieces = [
-        { emoji: '❤️', count: 30, color: '#ff2d55' },
-        { emoji: '✨', count: 25, color: '#fff7c2' },
-        { emoji: '🌸', count: 20, color: '#ff6b6b' },
-      ];
+      if (!heartShape) {
+        heartShape = window.confetti.shapeFromText({ text: '❤️', scalar: 1.8 });
+      }
 
-      pieces.forEach(piece => {
-        for (let i = 0; i < piece.count; i++) {
-          const el = document.createElement('div');
-          el.className = `confetti-piece confetti-piece--${piece.emoji === '❤️' ? 'heart' : piece.emoji === '✨' ? 'sparkle' : 'petal'}`;
-          el.textContent = piece.emoji;
-          el.style.setProperty('--tx', (Math.random() - 0.5) * 600);
-          el.style.setProperty('--ty', -300 - Math.random() * 200);
-          el.style.setProperty('--rot', Math.random() * 360);
-          el.style.setProperty('--dur', (800 + Math.random() * 800) + 'ms');
-          el.style.setProperty('--delay', Math.random() * 100 + 'ms');
-          el.style.setProperty('--w', (14 + Math.random() * 8) + 'px');
-          el.style.setProperty('--heart-color', piece.color);
-          
-          burst.appendChild(el);
-        }
+      if (!sparkleShape) {
+        sparkleShape = window.confetti.shapeFromText({ text: '✨', scalar: 1.55 });
+      }
+
+      const rect = countdownEl.getBoundingClientRect();
+      const origin = {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height / 2) / window.innerHeight,
+      };
+
+      window.confetti({
+        particleCount: 34,
+        spread: 82,
+        startVelocity: 34,
+        gravity: 0.95,
+        decay: 0.93,
+        drift: 0,
+        scalar: 1.18,
+        ticks: 220,
+        origin,
+        zIndex: 30,
+        shapes: [heartShape],
+        colors: ['#ff2d55', '#ff5c8a', '#ff8fb1'],
+      });
+
+      window.confetti({
+        particleCount: 18,
+        spread: 112,
+        startVelocity: 28,
+        gravity: 0.88,
+        decay: 0.94,
+        drift: 0,
+        scalar: 0.9,
+        ticks: 240,
+        origin,
+        zIndex: 30,
+        shapes: [sparkleShape],
+        colors: ['#fff2b8', '#ffe082', '#ffd166'],
       });
     }
 
     function checkCelebrationStatus() {
-      const celebrationStart = localStorage.getItem('celebrationStart');
-      if (celebrationStart) {
-        const elapsed = Date.now() - parseInt(celebrationStart);
-        if (elapsed < 2 * 60 * 60 * 1000) {
-          // Still in 2-hour celebration window
-          if (countdownEl) {
-            countdownEl.textContent = 'We finally meet❤️';
-            countdownEl.classList.add('is-celebrating');
-          }
-          hasCountdownCelebrated = true;
-          burstConfetti();
-          return true;
-        } else {
-          // 2 hours have passed, clear it
-          localStorage.removeItem('celebrationStart');
+      const savedSession = localStorage.getItem(celebrationStorageKey);
+      if (!savedSession) return false;
+
+      try {
+        const { source, startedAt } = JSON.parse(savedSession);
+        if (source !== 'countdown') {
+          localStorage.removeItem(celebrationStorageKey);
+          return false;
         }
+
+        hasCountdownCelebrated = true;
+
+        startCelebrationSession('countdown', Number(startedAt));
+        return true;
+      } catch (error) {
+        localStorage.removeItem(celebrationStorageKey);
       }
+
       return false;
     }
 
