@@ -22,6 +22,8 @@
     <span class="petal"></span>
   </div>
 
+  <div class="countdown-confetti-burst" id="confetti-burst" aria-hidden="true"></div>
+
   <nav class="nav">
     <div class="shell nav__inner">
       <a href="index.html" class="brand">Ann & Kevin</a>
@@ -39,13 +41,15 @@
     <section class="hero shell">
       <div class="hero__top">
        <div class="eyebrow countdown-pill">
-        <span class="countdown-label">Countdown to our wedding</span>
+        <span class="countdown-label">Days until we meet</span>
         <span id="wedding-countdown">Loading...</span>
        </div>
 
         <h1>
-          Out of everything,<br>
-          we found this, and it feels more real <span>than anything else.</span>
+          <span>
+            Just a little longer until our forever begins,<br>
+            together as one
+          </span>
         </h1>
 
         <div class="hero__cta">
@@ -72,37 +76,32 @@
 
     <section class="section shell" id="message">
       <article class="message-card message-card--full">
-        <p class="section-kicker">A note for you my love.</p>
-        <h2 class="section-title">You make me the happiest man in the world.</h2>
+        <p class="section-kicker">A note for you my love</p>
+        <h2 class="section-title">To the Woman Who Has My Heart</h2>
 
         <div class="message-lines">
           <p>
-            I do not think I will ever stop being grateful for the way you came into my life.
-            You make me so happy in the most real and steady way. With you, I feel at peace.
-            I never feel like I have to be anyone else. I can just be me, and somehow that version of me
-            is happier, calmer, and more complete because of you.
+            As I sit here writing this, all I can think about is how close we are to seeing each other again. Every day that passes brings me one step closer to you, and I honestly cannot wait. I miss you more than words can explain, and the thought of finally being able to hold you, look into your eyes, and feel your warmth again fills me with so much joy.
           </p>
 
           <p>
-            I look forward to marrying you more than I can properly put into words. I look forward to
-            waking up next to you everyday, laughing with you, spending ordinary days with you, building a home
-            with you, and growing through every season of life together. The thought of forever with you
-            does not scare me. It comforts me.
+            It still amazes me that very soon, I will stand beside you and promise you forever. Soon, you will not just be the person I love. You will be my wife, which means you are officially stuck with me for life. I hope you are fully prepared.
           </p>
 
           <p>
-            I want you to know this clearly: I will always do my level best to keep you happy,
-            to take care of your heart, and to be the kind of husband you can be proud of.
-            But more than that, I love how we are with each other — how we’re a little obsessed,
-            a little clingy, always wanting to be close, always finding comfort in just holding onto each other.
-            There’s something so special about the way we love, and I never want to lose that.
-            I want to keep choosing you, every single day, for the rest of my life.
+            You have brought so much peace, warmth, and happiness into my life. The way you love me, care for me, and somehow tolerate all my nonsense makes me feel incredibly lucky. Being with you feels like home, and I cannot wait for us to begin this new chapter together.
           </p>
 
           <p>
-            You are one of the best things that has ever happened to me. I love your heart, your presence,
-            your warmth, and the way you make even simple moments feel special. If this is what love feels like
-            with you, then I know I have found something I never want to lose.
+            I am looking forward to all of it. Seeing you walk towards me, holding your hand, building our home, travelling, laughing over silly things, arguing about what to eat, and facing every season of life together. More than anything, I am looking forward to finally being yours, completely and forever.
+          </p>
+
+          <p>
+            I pray God continues to bless us, guide us, and strengthen the life we are about to build. I promise to keep choosing you, loving you, protecting your heart, and doing my best to make you feel as cherished as you make me feel every day.
+          </p>
+
+          <p>
+            Thank you for being my peace, my happiness, and the greatest blessing in my life. I cannot wait to see you, hold you, annoy you in person again, and begin forever with you.
           </p>
 
           <p class="message-sign">Yours always,<br>Kev ❤️</p>
@@ -235,12 +234,13 @@
     function updateCountdown() {
       if (!countdownEl) return;
 
-      const targetDate = new Date(2026, 7, 24, 0, 0, 0);
+      // 2026-08-01 19:50 IST = 2026-08-01 14:20 UTC
+      const targetDate = new Date(Date.UTC(2026, 7, 1, 14, 20, 0));
       const now = new Date();
       const diff = targetDate - now;
 
       if (diff <= 0) {
-        countdownEl.textContent = "It's our day ❤️";
+        launchCountdownCelebration();
         return;
       }
 
@@ -252,6 +252,76 @@
       countdownEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
 
+    function launchCountdownCelebration() {
+      if (!countdownEl || hasCountdownCelebrated) return;
+
+      hasCountdownCelebrated = true;
+      countdownEl.textContent = 'We finally meet❤️';
+      countdownEl.classList.add('is-celebrating');
+      
+      // Store celebration start time (valid for 2 hours)
+      const celebrationStart = Date.now();
+      localStorage.setItem('celebrationStart', celebrationStart);
+      
+      burstConfetti();
+      
+      // Clear confetti after 2 hours
+      setTimeout(() => {
+        localStorage.removeItem('celebrationStart');
+        const burst = document.getElementById('confetti-burst');
+        if (burst) burst.innerHTML = '';
+      }, 2 * 60 * 60 * 1000);
+    }
+
+    function burstConfetti() {
+      const burst = document.getElementById('confetti-burst');
+      if (!burst) return;
+
+      const pieces = [
+        { emoji: '❤️', count: 30, color: '#ff2d55' },
+        { emoji: '✨', count: 25, color: '#fff7c2' },
+        { emoji: '🌸', count: 20, color: '#ff6b6b' },
+      ];
+
+      pieces.forEach(piece => {
+        for (let i = 0; i < piece.count; i++) {
+          const el = document.createElement('div');
+          el.className = `confetti-piece confetti-piece--${piece.emoji === '❤️' ? 'heart' : piece.emoji === '✨' ? 'sparkle' : 'petal'}`;
+          el.textContent = piece.emoji;
+          el.style.setProperty('--tx', (Math.random() - 0.5) * 600);
+          el.style.setProperty('--ty', -300 - Math.random() * 200);
+          el.style.setProperty('--rot', Math.random() * 360);
+          el.style.setProperty('--dur', (800 + Math.random() * 800) + 'ms');
+          el.style.setProperty('--delay', Math.random() * 100 + 'ms');
+          el.style.setProperty('--w', (14 + Math.random() * 8) + 'px');
+          el.style.setProperty('--heart-color', piece.color);
+          
+          burst.appendChild(el);
+        }
+      });
+    }
+
+    function checkCelebrationStatus() {
+      const celebrationStart = localStorage.getItem('celebrationStart');
+      if (celebrationStart) {
+        const elapsed = Date.now() - parseInt(celebrationStart);
+        if (elapsed < 2 * 60 * 60 * 1000) {
+          // Still in 2-hour celebration window
+          if (countdownEl) {
+            countdownEl.textContent = 'We finally meet❤️';
+            countdownEl.classList.add('is-celebrating');
+          }
+          hasCountdownCelebrated = true;
+          burstConfetti();
+          return true;
+        } else {
+          // 2 hours have passed, clear it
+          localStorage.removeItem('celebrationStart');
+        }
+      }
+      return false;
+    }
+
     audio.addEventListener('ended', () => {
       if (activeCard) {
         activeCard.classList.remove('is-playing');
@@ -260,6 +330,7 @@
     });
 
     buildMusicGrid();
+    checkCelebrationStatus();
     updateCountdown();
     setInterval(updateCountdown, 1000);
   </script>
